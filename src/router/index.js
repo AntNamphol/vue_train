@@ -1,29 +1,74 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Vue from "vue";
+import VueRouter from "vue-router";
 
-Vue.use(VueRouter)
+Vue.use(VueRouter);
 
-const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView
-  },
-  {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
-]
-
+// Middleware ตรวจสอบการล็อกอิน
 const router = new VueRouter({
-  mode: 'history',
+  mode: "history",
   base: process.env.BASE_URL,
-  routes
-})
+  routes: [
+    {
+      path: "/",
+      name: "Login",
+      component: () => import("../views/Login.vue"),
+    },
+    {
+      path: "/signup",
+      name: "Signup",
+      component: () => import("../views/Register.vue"),
+    },
+    {
+      path: "/toolbar",
+      name: "Toolbar",
+      component: () => import("../views/Toolbar.vue"),
+      children: [
+        {
+          path: "/home",
+          name: "Home",
+          component: () => import("../views/Home.vue"),
+        },
+        {
+          path: "/production",
+          name: "Production",
+          component: () => import("../views/production.vue"),
+        },
+        {
+          path: "/shopping",
+          name: "Shopping",
+          component: () => import("../views/Shopping.vue"),
+        },
+        {
+          path: "/editprofile",
+          name: "Editprofile",
+          component: () => import("../views/EditProfile.vue"),
+        },
+      ],
+    },
+    // Catch-all route for undefined paths
+    {
+      path: "*", // This will match all undefined paths
+      name: "404Page",
+      component: () => import("../views/404page.vue"),
+    },
+  ],
+});
 
-export default router
+// Middleware
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = !!localStorage.getItem("authToken");
+
+  console.log(`Navigating to: ${to.name}`);
+  console.log(`Authenticated: ${isAuthenticated}`);
+
+  // Log the path to see if the redirect is happening
+  if ((to.name !== "Login" && to.name !== "Signup") && !isAuthenticated) {
+    console.log('Redirecting to Login...');
+    next({ name: "Login" });
+  } else {
+    next();
+  }
+});
+
+
+export default router;
